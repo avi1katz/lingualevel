@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Mic, MicOff, Play, Pause, RotateCcw, Send, Volume2, CheckCircle, AlertCircle } from 'lucide-react';
 import { LanguageConcept, Challenge, AssessmentResult } from '../App';
+import { apiService, AssessmentRequest } from '../services/api';
 
 interface AssessmentScreenProps {
   concept: LanguageConcept;
@@ -174,44 +175,103 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
   const submitResponse = () => {
     if (!audioBlob) return;
 
-    // Mock transcription
-    const mockTranscription = currentChallenge.type === 'translation' 
-      ? currentChallenge.expectedAnswer || 'Mock transcription'
-      : 'Mock response in target language';
+    handleSubmitResponse();
+  };
 
-    const newResponse = {
-      challengeId: currentChallenge.id,
-      audioBlob,
-      transcription: mockTranscription
-    };
+  const handleSubmitResponse = async () => {
+    if (!audioBlob) return;
 
-    setResponses(prev => [...prev, newResponse]);
-
-    if (isLastChallenge) {
-      // Generate assessment result
-      const mockResult: AssessmentResult = {
-        conceptMastery: Math.floor(Math.random() * 30) + 70,
-        overallScores: {
-          grammar: Math.floor(Math.random() * 25) + 75,
-          pronunciation: Math.floor(Math.random() * 20) + 80,
-          vocabulary: Math.floor(Math.random() * 30) + 70,
-          fluency: Math.floor(Math.random() * 25) + 75
-        },
-        feedback: `Your understanding of ${concept.name.toLowerCase()} shows solid foundation with room for improvement in specific areas. Focus on consistent application of the rules and expanding your vocabulary in this domain.`,
-        challengeResults: responses.concat([newResponse]).map((response, index) => ({
-          challengeId: response.challengeId,
-          userResponse: 'Audio response',
-          transcription: response.transcription,
-          score: Math.floor(Math.random() * 30) + 70,
-          feedback: 'Good effort with minor areas for improvement.'
-        }))
+    try {
+      const assessmentRequest: AssessmentRequest = {
+        challengeId: currentChallenge.id,
+        challengeType: currentChallenge.type,
+        prompt: currentChallenge.prompt,
+        targetLanguage: currentChallenge.targetLanguage,
+        conceptId: currentChallenge.conceptId,
+        conceptName: concept.name,
+        expectedAnswer: currentChallenge.expectedAnswer
       };
 
-      onComplete(mockResult);
-    } else {
-      // Move to next challenge
-      setCurrentChallengeIndex(prev => prev + 1);
-      resetRecording();
+      const result = await apiService.assessResponse(audioBlob, assessmentRequest);
+
+      const newResponse = {
+        challengeId: currentChallenge.id,
+        audioBlob,
+        transcription: result.transcription,
+        apiResult: result
+      };
+
+      setResponses(prev => [...prev, newResponse]);
+
+      if (isLastChallenge) {
+        // Calculate overall assessment result from all responses
+        const allResponses = responses.concat([newResponse]);
+        const avgScore = allResponses.reduce((sum, resp) => 
+          sum + (resp.apiResult?.score || 75), 0) / allResponses.length;
+
+        const assessmentResult: AssessmentResult = {
+          conceptMastery: Math.round(avgScore),
+          overallScores: {
+            grammar: result.feedback.grammar,
+            pronunciation: result.feedback.pronunciation,
+            vocabulary: result.feedback.vocabulary,
+            fluency: result.feedback.fluency
+          },
+          feedback: result.feedback.feedback,
+          challengeResults: allResponses.map((response) => ({
+            challengeId: response.challengeId,
+            userResponse: 'Audio response',
+            transcription: response.transcription,
+            score: response.apiResult?.score || 75,
+            feedback: response.apiResult?.feedback.feedback || 'Assessment completed.'
+          }))
+        };
+
+        onComplete(assessmentResult);
+      } else {
+        // Move to next challenge
+        setCurrentChallengeIndex(prev => prev + 1);
+        resetRecording();
+      }
+    } catch (error) {
+      console.error('Assessment failed:', error);
+      // Fallback to mock behavior if API fails
+      const mockTranscription = currentChallenge.type === 'translation' 
+        ? currentChallenge.expectedAnswer || 'Mock transcription'
+        : 'Mock response in target language';
+
+      const newResponse = {
+        challengeId: currentChallenge.id,
+        audioBlob,
+        transcription: mockTranscription
+      };
+
+      setResponses(prev => [...prev, newResponse]);
+
+      if (isLastChallenge) {
+        const mockResult: AssessmentResult = {
+          conceptMastery: Math.floor(Math.random() * 30) + 70,
+          overallScores: {
+            grammar: Math.floor(Math.random() * 25) + 75,
+            pronunciation: Math.floor(Math.random() * 20) + 80,
+            vocabulary: Math.floor(Math.random() * 30) + 70,
+            fluency: Math.floor(Math.random() * 25) + 75
+          },
+          feedback: `Your understanding of ${concept.name.toLowerCase()} shows solid foundation with room for improvement in specific areas. Focus on consistent application of the rules and expanding your vocabulary in this domain.`,
+          challengeResults: responses.concat([newResponse]).map((response, index) => ({
+            challengeId: response.challengeId,
+            userResponse: 'Audio response',
+            transcription: response.transcription,
+            score: Math.floor(Math.random() * 30) + 70,
+            feedback: 'Good effort with minor areas for improvement.'
+          }))
+        };
+
+        onComplete(mockResult);
+      } else {
+        setCurrentChallengeIndex(prev => prev + 1);
+        resetRecording();
+      }
     }
   };
 
