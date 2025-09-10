@@ -5,8 +5,8 @@ A Python FastAPI backend for the LinguaCoach language learning assessment platfo
 ## Features
 
 - **Audio Transcription**: Uses OpenAI Whisper API to convert speech to text
-- **Translation**: Translates responses using GPT-4 for open-ended questions
-- **AI Evaluation**: Comprehensive language assessment using GPT-4
+- **Translation**: Translates responses using OpenAI for open-ended questions
+- **AI Evaluation**: Comprehensive language assessment using OpenAI
 - **RESTful API**: Clean endpoints for frontend integration
 - **CORS Support**: Configured for frontend development
 
@@ -81,8 +81,8 @@ Health check endpoint.
 
 1. **Audio Upload**: Client uploads audio file with challenge metadata
 2. **Transcription**: Whisper API converts speech to text
-3. **Translation**: GPT-4 translates response (for open-ended questions)
-4. **Evaluation**: GPT-4 analyzes response across multiple criteria:
+3. **Translation**: OpenAI translates response (for open-ended questions)
+4. **Evaluation**: OpenAI analyzes response across multiple criteria:
    - Pronunciation accuracy
    - Grammar correctness
    - Vocabulary richness

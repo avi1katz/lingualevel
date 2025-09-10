@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Mic, MicOff, Play, Pause, RotateCcw, Send, Volume2, CheckCircle, AlertCircle } from 'lucide-react';
 import { LanguageConcept, Challenge, AssessmentResult } from '../App';
 import { apiService, AssessmentRequest } from '../services/api';
+import { useRecorder } from '../hooks/useRecorder';
 
 interface AssessmentScreenProps {
   concept: LanguageConcept;
@@ -88,89 +89,24 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [responses, setResponses] = useState<Array<{ challengeId: string; audioBlob: Blob | null; transcription: string }>>([]);
   
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioURL, setAudioURL] = useState<string>('');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+  isRecording,
+  audioBlob,
+  audioURL,
+  recordingTime,
+  isPlaying,
+  audioRef,
+  startRecording,
+  stopRecording,
+  resetRecording,
+  playAudio,
+} = useRecorder(5); // 30-second max by default
+
 
   const currentChallenge = challenges[currentChallengeIndex];
   const isLastChallenge = currentChallengeIndex === challenges.length - 1;
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      if (audioURL) {
-        URL.revokeObjectURL(audioURL);
-      }
-    };
-  }, [audioURL]);
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      const chunks: BlobPart[] = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        setAudioURL(URL.createObjectURL(blob));
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingTime(0);
-      
-      intervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } catch (error) {
-      console.error('Error starting recording:', error);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-  };
-
-  const playAudio = () => {
-    if (audioRef.current && audioURL) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        audioRef.current.play();
-        setIsPlaying(true);
-        audioRef.current.onended = () => setIsPlaying(false);
-      }
-    }
-  };
-
-  const resetRecording = () => {
-    setAudioBlob(null);
-    if (audioURL) {
-      URL.revokeObjectURL(audioURL);
-    }
-    setAudioURL('');
-    setRecordingTime(0);
-    setIsPlaying(false);
-  };
 
   const submitResponse = () => {
     if (!audioBlob) return;

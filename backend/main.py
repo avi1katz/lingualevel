@@ -75,10 +75,10 @@ async def transcribe_audio(audio_file_path: str) -> str:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 async def translate_text(text: str, target_language: str = "English") -> str:
-    """Translate text using OpenAI GPT-4"""
+    """Translate text using OpenAI"""
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-5-nano",
             messages=[
                 {
                     "role": "system",
@@ -105,7 +105,7 @@ async def evaluate_response(
     expected_answer: Optional[str],
     concept_name: str
 ) -> Dict[str, Any]:
-    """Evaluate language response using OpenAI GPT-4"""
+    """Evaluate language response using OpenAI"""
     
     evaluation_prompt = f"""
     You are an expert language teacher evaluating a student's response. Analyze the following:
@@ -146,7 +146,7 @@ async def evaluate_response(
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-5-nano",
             messages=[
                 {
                     "role": "system",
