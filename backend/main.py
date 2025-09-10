@@ -89,8 +89,6 @@ async def translate_text(text: str, target_language: str = "English") -> str:
                     "content": text
                 }
             ],
-            max_tokens=200,
-            temperature=0.3
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -157,8 +155,6 @@ async def evaluate_response(
                     "content": evaluation_prompt
                 }
             ],
-            max_tokens=800,
-            temperature=0.3
         )
         
         evaluation_text = response.choices[0].message.content.strip()
