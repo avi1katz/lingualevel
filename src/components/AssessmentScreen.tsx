@@ -101,7 +101,7 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
   stopRecording,
   resetRecording,
   playAudio,
-} = useRecorder(5); // 30-second max by default
+} = useRecorder(30); // 30 seconds max per recording
 
 
   const currentChallenge = challenges[currentChallengeIndex];
