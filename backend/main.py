@@ -77,20 +77,12 @@ async def transcribe_audio(audio_file_path: str) -> str:
 async def translate_text(text: str, target_language: str = "English") -> str:
     """Translate text using OpenAI"""
     try:
-        response = client.chat.completions.create(
+        response = client.responses.create(
             model="gpt-5-nano",
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"You are a professional translator. Translate the following text to {target_language}. Only return the translation, no explanations."
-                },
-                {
-                    "role": "user",
-                    "content": text
-                }
-            ],
+            instructions=f"You are a professional translator. Translate the following text to {target_language}. Only return the translation, no explanations.",
+            input=text,
         )
-        return response.choices[0].message.content.strip()
+        return response.output_text.strip()
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")
         return "Translation unavailable"
@@ -115,7 +107,7 @@ async def evaluate_response(
     Expected Answer (if translation): {expected_answer or 'N/A'}
     Language Concept Being Tested: {concept_name}
 
-    Evaluate the response on these criteria (score 0-100 for each):
+    Evaluate the response on these criteria (score an int between 0-100 for each):
     1. Pronunciation (based on likely pronunciation from text)
     2. Grammar correctness
     3. Vocabulary appropriateness and richness
@@ -136,28 +128,20 @@ async def evaluate_response(
         "fluency": <score 0-100>,
         "concept_mastery": <score 0-100>,
         "overall_score": <score 0-100>,
-        "feedback": "detailed feedback text",
+        "feedback": "concise feedback text",
         "strengths": ["strength1", "strength2"],
         "improvements": ["area1", "area2"]
     }}
     """
 
     try:
-        response = client.chat.completions.create(
+        response = client.responses.create(
             model="gpt-5-nano",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert language assessment AI. Provide detailed, constructive feedback in valid JSON format only."
-                },
-                {
-                    "role": "user",
-                    "content": evaluation_prompt
-                }
-            ],
+            instructions="You are an expert language assessment AI. Provide detailed, constructive feedback in valid JSON format only.",
+            input=evaluation_prompt,
         )
         
-        evaluation_text = response.choices[0].message.content.strip()
+        evaluation_text = response.output_text.strip()
         
         # Try to parse JSON response
         try:
@@ -251,7 +235,7 @@ async def assess_response(
             challenge_id=challenge_id,
             transcription=transcription,
             translation=translation,
-            score=evaluation.get("overall_score", 75),
+            score=int(evaluation.get("overall_score", 75)),
             feedback=evaluation,
             timestamp=datetime.now().isoformat()
         )
