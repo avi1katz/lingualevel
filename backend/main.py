@@ -128,7 +128,7 @@ async def evaluate_response(
         "fluency": <score 0-100>,
         "concept_mastery": <score 0-100>,
         "overall_score": <score 0-100>,
-        "feedback": "concise feedback text",
+        "feedback": "very concise feedback text",
         "strengths": ["strength1", "strength2"],
         "improvements": ["area1", "area2"]
     }}
