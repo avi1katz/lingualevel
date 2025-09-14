@@ -1,69 +1,11 @@
-import React from 'react';
-import { Languages, BookOpen, Clock, Users, Briefcase, MapPin, Heart, GraduationCap } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Languages, BookOpen, Clock, Users, GraduationCap } from 'lucide-react';
 import { LanguageConcept } from '../App';
+import { apiService } from '../services/api';
 
 interface ConceptSelectorProps {
   onConceptSelect: (concept: LanguageConcept) => void;
 }
-
-const concepts: LanguageConcept[] = [
-  {
-    id: 'past-tense',
-    name: 'Past Tense',
-    description: 'Master the use of past tense in various contexts',
-    difficulty: 'intermediate',
-    category: 'Grammar'
-  },
-  {
-    id: 'subjunctive-mood',
-    name: 'Subjunctive Mood',
-    description: 'Express doubt, emotion, and hypothetical situations',
-    difficulty: 'advanced',
-    category: 'Grammar'
-  },
-  {
-    id: 'travel-vocabulary',
-    name: 'Travel Vocabulary',
-    description: 'Essential words and phrases for traveling',
-    difficulty: 'beginner',
-    category: 'Vocabulary'
-  },
-  {
-    id: 'business-communication',
-    name: 'Business Communication',
-    description: 'Professional language for workplace interactions',
-    difficulty: 'advanced',
-    category: 'Communication'
-  },
-  {
-    id: 'conditional-sentences',
-    name: 'Conditional Sentences',
-    description: 'If-then statements and hypothetical scenarios',
-    difficulty: 'intermediate',
-    category: 'Grammar'
-  },
-  {
-    id: 'food-dining',
-    name: 'Food & Dining',
-    description: 'Restaurant vocabulary and food-related expressions',
-    difficulty: 'beginner',
-    category: 'Vocabulary'
-  },
-  {
-    id: 'expressing-emotions',
-    name: 'Expressing Emotions',
-    description: 'Vocabulary and structures for describing feelings',
-    difficulty: 'intermediate',
-    category: 'Communication'
-  },
-  {
-    id: 'formal-informal',
-    name: 'Formal vs Informal Speech',
-    description: 'Appropriate register for different social contexts',
-    difficulty: 'advanced',
-    category: 'Communication'
-  }
-];
 
 const categoryIcons = {
   Grammar: GraduationCap,
@@ -78,6 +20,52 @@ const difficultyColors = {
 };
 
 const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) => {
+  const [concepts, setConcepts] = useState<LanguageConcept[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchConcepts = async () => {
+      try {
+        const response = await apiService.getConcepts();
+        // Extract the concepts array from the response
+        const conceptsData = response.concepts || [];
+        setConcepts(conceptsData);
+      } catch (err) {
+        setError('Failed to load language concepts. Please try again later.');
+        console.error('Error fetching concepts:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConcepts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-6 bg-red-50 rounded-lg">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-6xl mx-auto">
