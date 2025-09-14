@@ -80,14 +80,40 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) =>
             </h1>
           </div>
           
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">
             Language Concept Assessment
           </h2>
           
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Choose a language concept to assess your mastery. You'll complete a series of translation 
-            and speaking exercises to evaluate your understanding and proficiency.
-          </p>
+          {/* Info Section */}
+          <div className="bg-white rounded-2xl shadow-sm p-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="p-4 bg-blue-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-blue-600">1</span>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Choose a Concept</h4>
+                <p className="text-gray-600">Select the language concept you want to assess from our comprehensive list.</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="p-4 bg-purple-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-purple-600">2</span>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Complete Exercises</h4>
+                <p className="text-gray-600">Answer translation questions and record spoken responses to demonstrate your skills.</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="p-4 bg-green-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-green-600">3</span>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Get Results</h4>
+                <p className="text-gray-600">Receive detailed feedback on your mastery level and areas for improvement.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Concept Grid */}
@@ -138,37 +164,6 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) =>
               </div>
             );
           })}
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-16 bg-white rounded-2xl shadow-sm p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="p-4 bg-blue-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-600">1</span>
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Choose a Concept</h4>
-              <p className="text-gray-600">Select the language concept you want to assess from our comprehensive list.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="p-4 bg-purple-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-purple-600">2</span>
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Complete Exercises</h4>
-              <p className="text-gray-600">Answer translation questions and record spoken responses to demonstrate your skills.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="p-4 bg-green-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-green-600">3</span>
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Get Results</h4>
-              <p className="text-gray-600">Receive detailed feedback on your mastery level and areas for improvement.</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
