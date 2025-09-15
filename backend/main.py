@@ -353,6 +353,86 @@ async def get_available_concepts():
     ]
     return {"concepts": concepts}
 
+@app.get("/concepts/{concept_id}/challenges")
+async def get_concept_challenges(concept_id: str):
+    """Get challenges for a specific concept"""
+    challenges = {
+        "past-tense": [
+            {
+                "id": "pt-1",
+                "type": "translation",
+                "prompt": "I went to the store yesterday.",
+                "targetLanguage": "Spanish",
+                "expectedAnswer": "Fui a la tienda ayer.",
+                "conceptId": "past-tense"
+            },
+            {
+                "id": "pt-2",
+                "type": "open-ended",
+                "prompt": "Describe what you did last weekend using past tense.",
+                "targetLanguage": "Spanish",
+                "conceptId": "past-tense"
+            },
+            {
+                "id": "pt-3",
+                "type": "translation",
+                "prompt": "She had already finished her homework when I arrived.",
+                "targetLanguage": "Spanish",
+                "expectedAnswer": "Ella ya había terminado su tarea cuando llegué.",
+                "conceptId": "past-tense"
+            }
+        ],
+        "travel-vocabulary": [
+            {
+                "id": "tv-1",
+                "type": "translation",
+                "prompt": "Where is the nearest train station?",
+                "targetLanguage": "Spanish",
+                "expectedAnswer": "¿Dónde está la estación de tren más cercana?",
+                "conceptId": "travel-vocabulary"
+            },
+            {
+                "id": "tv-2",
+                "type": "open-ended",
+                "prompt": "Ask for directions to a hotel in Spanish.",
+                "targetLanguage": "Spanish",
+                "conceptId": "travel-vocabulary"
+            },
+            {
+                "id": "tv-3",
+                "type": "translation",
+                "prompt": "I need to check in for my flight.",
+                "targetLanguage": "Spanish",
+                "expectedAnswer": "Necesito hacer el check-in para mi vuelo.",
+                "conceptId": "travel-vocabulary"
+            }
+        ]
+    }
+    
+    if concept_id not in challenges:
+        # Return default challenges if concept not found
+        return {
+            "challenges": [
+                {
+                    "id": f"{concept_id}-1",
+                    "type": "translation",
+                    "prompt": "This is a sample translation exercise.",
+                    "targetLanguage": "Spanish",
+                    "expectedAnswer": "Este es un ejercicio de traducción de muestra.",
+                    "conceptId": concept_id
+                },
+                {
+                    "id": f"{concept_id}-2",
+                    "type": "open-ended",
+                    "prompt": "Explain this concept in your target language.",
+                    "targetLanguage": "Spanish",
+                    "conceptId": concept_id
+                }
+            ]
+        }
+    
+    return {"challenges": challenges[concept_id]}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

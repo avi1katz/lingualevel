@@ -98,6 +98,21 @@ export class ApiService {
       throw error;
     }
   }
+
+  async getChallenges(conceptId: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/concepts/${conceptId}/challenges`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get challenges API error:', error);
+      throw error;
+    }
+  }
 }
 
 export const apiService = ApiService.getInstance();

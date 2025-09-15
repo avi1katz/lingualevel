@@ -10,82 +10,10 @@ interface AssessmentScreenProps {
   onBack: () => void;
 }
 
-// Mock challenges based on concept
-const generateChallenges = (concept: LanguageConcept): Challenge[] => {
-  const challengeMap: { [key: string]: Challenge[] } = {
-    'past-tense': [
-      {
-        id: '1',
-        type: 'translation',
-        prompt: 'I went to the store yesterday.',
-        targetLanguage: 'Spanish',
-        expectedAnswer: 'Fui a la tienda ayer.',
-        conceptId: concept.id
-      },
-      {
-        id: '2',
-        type: 'open-ended',
-        prompt: 'Describe what you did last weekend using past tense.',
-        targetLanguage: 'Spanish',
-        conceptId: concept.id
-      },
-      {
-        id: '3',
-        type: 'translation',
-        prompt: 'She had already finished her homework when I arrived.',
-        targetLanguage: 'Spanish',
-        expectedAnswer: 'Ella ya había terminado su tarea cuando llegué.',
-        conceptId: concept.id
-      }
-    ],
-    'travel-vocabulary': [
-      {
-        id: '1',
-        type: 'translation',
-        prompt: 'Where is the nearest train station?',
-        targetLanguage: 'Spanish',
-        expectedAnswer: '¿Dónde está la estación de tren más cercana?',
-        conceptId: concept.id
-      },
-      {
-        id: '2',
-        type: 'open-ended',
-        prompt: 'Ask for directions to a hotel in Spanish.',
-        targetLanguage: 'Spanish',
-        conceptId: concept.id
-      },
-      {
-        id: '3',
-        type: 'translation',
-        prompt: 'I need to check in for my flight.',
-        targetLanguage: 'Spanish',
-        expectedAnswer: 'Necesito hacer el check-in para mi vuelo.',
-        conceptId: concept.id
-      }
-    ]
-  };
-
-  return challengeMap[concept.id] || [
-    {
-      id: '1',
-      type: 'translation',
-      prompt: 'This is a sample translation exercise.',
-      targetLanguage: 'Spanish',
-      expectedAnswer: 'Este es un ejercicio de traducción de muestra.',
-      conceptId: concept.id
-    },
-    {
-      id: '2',
-      type: 'open-ended',
-      prompt: 'Explain this concept in your target language.',
-      targetLanguage: 'Spanish',
-      conceptId: concept.id
-    }
-  ];
-};
-
 const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete, onBack }) => {
-  const [challenges] = useState<Challenge[]>(generateChallenges(concept));
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [responses, setResponses] = useState<Array<{ challengeId: string; audioBlob: Blob | null; transcription: string }>>([]);
   
@@ -103,6 +31,21 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
   playAudio,
 } = useRecorder(30); // 30 seconds max per recording
 
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        const response = await apiService.getChallenges(concept.id);
+        setChallenges(response.challenges);
+      } catch (err) {
+        setError('Failed to load challenges. Please try again.');
+        console.error('Error fetching challenges:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChallenges();
+  }, [concept.id]);
 
   const currentChallenge = challenges[currentChallengeIndex];
   const isLastChallenge = currentChallengeIndex === challenges.length - 1;
@@ -224,6 +167,30 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
       speechSynthesis.speak(utterance);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-6 bg-red-50 rounded-lg">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4">
