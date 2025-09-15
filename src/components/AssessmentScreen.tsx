@@ -16,6 +16,7 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
   const [error, setError] = useState<string | null>(null);
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [responses, setResponses] = useState<Array<{ challengeId: string; audioBlob: Blob | null; transcription: string }>>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
 
   const {
@@ -59,6 +60,8 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
 
   const handleSubmitResponse = async () => {
     if (!audioBlob) return;
+
+    setIsSubmitting(true);
 
     try {
       const assessmentRequest: AssessmentRequest = {
@@ -151,6 +154,8 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
         setCurrentChallengeIndex(prev => prev + 1);
         resetRecording();
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -339,9 +344,22 @@ const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ concept, onComplete
                   <button
                     onClick={submitResponse}
                     className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center space-x-2 mx-auto"
+                    disabled={isSubmitting}
                   >
-                    <Send className="w-5 h-5" />
-                    <span>{isLastChallenge ? 'Complete Assessment' : 'Next Challenge'}</span>
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" fill="none" />
+                          <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4zm16 0a8 8 0 01-8 8v-4a4 4 0 004-4h4z" />
+                        </svg>
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        <span>{isLastChallenge ? 'Complete Assessment' : 'Next Challenge'}</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
