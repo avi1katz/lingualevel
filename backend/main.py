@@ -38,6 +38,22 @@ client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
+LANGUAGE_CODES = {
+    "Spanish": "es",
+    "French": "fr",
+    "German": "de",
+    "Italian": "it",
+    "Portuguese": "pt",
+    "Russian": "ru",
+    "Japanese": "ja",
+    "Korean": "ko",
+    "Chinese": "zh",
+    "Arabic": "ar",
+    "Hindi": "hi",
+    "English": "en"
+    # Add more languages as needed
+}
+
 class AssessmentRequest(BaseModel):
     challenge_id: str
     challenge_type: str  # 'translation' or 'open-ended'
@@ -63,14 +79,21 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-async def transcribe_audio(audio_file_path: str) -> str:
+async def transcribe_audio(audio_file_path: str, target_language: str) -> str:
     """Transcribe audio using OpenAI Whisper API"""
     try:
+        # Convert language name to ISO code
+        language_code = LANGUAGE_CODES.get(target_language)
+        if not language_code:
+            logger.warning(f"Unknown language: {target_language}, falling back to auto-detection")
+            language_code = None  # Whisper will auto-detect if language is None
+            
         with open(audio_file_path, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                response_format="text"
+                response_format="text",
+                language=language_code
             )
         return transcript.strip()
     except Exception as e:
