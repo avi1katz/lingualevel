@@ -1,6 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -10,12 +9,16 @@ import tempfile
 import logging
 from pydantic import BaseModel
 from datetime import datetime
-import asyncio
+import time
 
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="LinguaCoach Assessment API", version="1.0.0")
@@ -205,20 +208,24 @@ async def assess_response(
             temp_audio_path = temp_file.name
         
         logger.info(f"Processing assessment for challenge {challenge_id}")
-        
+        start_time = time.time()
         # Step 1: Transcribe audio
         logger.info("Starting transcription...")
-        transcription = await transcribe_audio(temp_audio_path)
+        transcription = await transcribe_audio(temp_audio_path, target_language)
         logger.info(f"Transcription completed: {transcription[:100]}...")
+        logger.info(f"Transcription took {time.time() - start_time:.2f} seconds")
         
         # Step 2: Translate if needed (for open-ended questions)
         translation = None
         if challenge_type == "open-ended":
+            start_time = time.time()
             logger.info("Starting translation...")
             translation = await translate_text(transcription, "English")
             logger.info(f"Translation completed: {translation[:100]}...")
+            logger.info(f"Translation took {time.time() - start_time:.2f} seconds")
         
         # Step 3: Evaluate response
+        start_time = time.time()
         logger.info("Starting evaluation...")
         evaluation = await evaluate_response(
             transcription=transcription,
@@ -229,6 +236,7 @@ async def assess_response(
             concept_name=concept_name
         )
         logger.info("Evaluation completed")
+        logger.info(f"Evaluation took {time.time() - start_time:.2f} seconds")
         
         # Prepare result
         result = AssessmentResult(
