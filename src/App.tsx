@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ConceptSelector from './components/ConceptSelector';
 import AssessmentScreen from './components/AssessmentScreen';
 import ResultsScreen from './components/ResultsScreen';
@@ -13,7 +14,7 @@ export type LanguageConcept = {
 };
 
 export type Challenge = {
-  id: string;
+  id:string;
   type: 'translation' | 'open-ended';
   prompt: string;
   targetLanguage: string;
@@ -39,57 +40,21 @@ export type AssessmentResult = {
   }>;
 };
 
-type Screen = 'concept-selection' | 'assessment' | 'results';
+const queryClient = new QueryClient();
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('concept-selection');
-  const [selectedConcept, setSelectedConcept] = useState<LanguageConcept | null>(null);
-  const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
-
-  const handleConceptSelect = (concept: LanguageConcept) => {
-    setSelectedConcept(concept);
-    setCurrentScreen('assessment');
-  };
-
-  const handleAssessmentComplete = (result: AssessmentResult) => {
-    setAssessmentResult(result);
-    setCurrentScreen('results');
-  };
-
-  const handleStartOver = () => {
-    setSelectedConcept(null);
-    setAssessmentResult(null);
-    setCurrentScreen('concept-selection');
-  };
-
-  const handleRetryAssessment = () => {
-    setAssessmentResult(null);
-    setCurrentScreen('assessment');
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {currentScreen === 'concept-selection' && (
-        <ConceptSelector onConceptSelect={handleConceptSelect} />
-      )}
-      
-      {currentScreen === 'assessment' && selectedConcept && (
-        <AssessmentScreen 
-          concept={selectedConcept}
-          onComplete={handleAssessmentComplete}
-          onBack={() => setCurrentScreen('concept-selection')}
-        />
-      )}
-      
-      {currentScreen === 'results' && assessmentResult && selectedConcept && (
-        <ResultsScreen 
-          concept={selectedConcept}
-          result={assessmentResult}
-          onStartOver={handleStartOver}
-          onRetryAssessment={handleRetryAssessment}
-        />
-      )}
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<ConceptSelector />} />
+            <Route path="/assessment/:conceptId" element={<AssessmentScreen />} />
+            <Route path="/results" element={<ResultsScreen />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </QueryClientProvider>
   );
 }
 

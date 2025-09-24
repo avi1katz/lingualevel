@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Languages, BookOpen, Clock, Users, GraduationCap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { LanguageConcept } from '../App';
 import { apiService } from '../services/api';
-
-interface ConceptSelectorProps {
-  onConceptSelect: (concept: LanguageConcept) => void;
-}
 
 const categoryIcons = {
   Grammar: GraduationCap,
@@ -19,30 +17,21 @@ const difficultyColors = {
   advanced: 'from-red-500 to-pink-500'
 };
 
-const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) => {
-  const [concepts, setConcepts] = useState<LanguageConcept[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const ConceptSelector: React.FC = () => {
+  const navigate = useNavigate();
+  const { data: concepts, isLoading, error } = useQuery<LanguageConcept[], Error>({
+    queryKey: ['concepts'],
+    queryFn: async () => {
+      const response = await apiService.getConcepts();
+      return response.concepts || [];
+    }
+  });
 
-  useEffect(() => {
-    const fetchConcepts = async () => {
-      try {
-        const response = await apiService.getConcepts();
-        // Extract the concepts array from the response
-        const conceptsData = response.concepts || [];
-        setConcepts(conceptsData);
-      } catch (err) {
-        setError('Failed to load language concepts. Please try again later.');
-        console.error('Error fetching concepts:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleConceptSelect = (concept: LanguageConcept) => {
+    navigate(`/assessment/${concept.id}`, { state: { concept } });
+  };
 
-    fetchConcepts();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -54,7 +43,7 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) =>
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-6 bg-red-50 rounded-lg">
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600">{error.message}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
@@ -118,14 +107,14 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) =>
 
         {/* Concept Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {concepts.map((concept) => {
+          {concepts?.map((concept) => {
             const IconComponent = categoryIcons[concept.category as keyof typeof categoryIcons];
             
             return (
-              <div
+              <button
                 key={concept.id}
-                onClick={() => onConceptSelect(concept)}
-                className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:scale-105 overflow-hidden"
+                onClick={() => handleConceptSelect(concept)}
+                className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:scale-105 overflow-hidden text-left"
               >
                 <div className="p-6">
                   {/* Header */}
@@ -161,7 +150,7 @@ const ConceptSelector: React.FC<ConceptSelectorProps> = ({ onConceptSelect }) =>
 
                 {/* Hover Effect */}
                 <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-              </div>
+              </button>
             );
           })}
         </div>

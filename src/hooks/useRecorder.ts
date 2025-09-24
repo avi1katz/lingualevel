@@ -1,18 +1,25 @@
-// src/hooks/useRecorder.ts
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-export function useRecorder(maxSeconds: number = 10) {
+export function useRecorder(maxSeconds: number = 30) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioURL, setAudioURL] = useState<string>('');
   const [recordingTime, setRecordingTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const recordingTimeRef = useRef(0);
-  const isRecordingRef = useRef(false);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -32,29 +39,21 @@ export function useRecorder(maxSeconds: number = 10) {
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
-      recordingTimeRef.current = 0;
 
       intervalRef.current = setInterval(() => {
-        recordingTimeRef.current += 1;
-        setRecordingTime(recordingTimeRef.current);
-        if (recordingTimeRef.current >= maxSeconds) {
-          stopRecording();
-        }
+        setRecordingTime(prevTime => {
+          const newTime = prevTime + 1;
+          if (newTime >= maxSeconds) {
+            stopRecording();
+          }
+          return newTime;
+        });
       }, 1000);
     } catch (err) {
       console.error('Recording error:', err);
+      alert('Could not start recording. Please make sure your microphone is enabled and try again.');
     }
-  }, [maxSeconds]);
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecordingRef.current) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-  }, []);
+  }, [maxSeconds, stopRecording]);
 
   const resetRecording = () => {
     if (audioURL) {
@@ -64,9 +63,7 @@ export function useRecorder(maxSeconds: number = 10) {
     setAudioURL('');
     setRecordingTime(0);
     setIsPlaying(false);
-    recordingTimeRef.current = 0;
   };
-
 
   const playAudio = () => {
     if (audioRef.current && audioURL) {
@@ -76,10 +73,15 @@ export function useRecorder(maxSeconds: number = 10) {
       } else {
         audioRef.current.play();
         setIsPlaying(true);
-        audioRef.current.onended = () => setIsPlaying(false);
       }
     }
   };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.onended = () => setIsPlaying(false);
+    }
+  }, [audioRef.current]);
 
   useEffect(() => {
     return () => {
@@ -91,10 +93,6 @@ export function useRecorder(maxSeconds: number = 10) {
       }
     };
   }, [audioURL]);
-
-  useEffect(() => {
-    isRecordingRef.current = isRecording;
-  }, [isRecording]);
 
   return {
     isRecording,

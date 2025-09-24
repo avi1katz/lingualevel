@@ -1,20 +1,23 @@
-import React from 'react';
-import { ArrowLeft, Trophy, Star, TrendingUp, BookOpen, Mic, MessageSquare, RotateCcw, Home, Download } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Trophy, Star, TrendingUp, BookOpen, Mic, MessageSquare, RotateCcw, Home, Download } from 'lucide-react';
 import { LanguageConcept, AssessmentResult } from '../App';
 
-interface ResultsScreenProps {
-  concept: LanguageConcept;
-  result: AssessmentResult;
-  onStartOver: () => void;
-  onRetryAssessment: () => void;
-}
+const ResultsScreen: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { result, concept } = (location.state || {}) as { result: AssessmentResult, concept: LanguageConcept };
 
-const ResultsScreen: React.FC<ResultsScreenProps> = ({ 
-  concept, 
-  result, 
-  onStartOver, 
-  onRetryAssessment 
-}) => {
+  useEffect(() => {
+    if (!result || !concept) {
+      navigate('/');
+    }
+  }, [result, concept, navigate]);
+
+  if (!result || !concept) {
+    return null; // or a loading indicator
+  }
+
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-100';
     if (score >= 80) return 'text-blue-600 bg-blue-100';
@@ -57,6 +60,14 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
+  };
+
+  const handleRetryAssessment = () => {
+    navigate(`/assessment/${concept.id}`, { state: { concept } });
+  };
+
+  const handleStartOver = () => {
+    navigate('/');
   };
 
   return (
@@ -151,11 +162,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">{challenge.score}%</p>
-                      <p className={`text-xs font-medium ${
-                        challenge.score >= 90 ? 'text-green-600' :
-                        challenge.score >= 80 ? 'text-blue-600' :
-                        challenge.score >= 70 ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
+                      <p className={`text-xs font-medium ${getScoreLabel(challenge.score)}`}>
                         {getScoreLabel(challenge.score)}
                       </p>
                     </div>
@@ -206,7 +213,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={onRetryAssessment}
+              onClick={handleRetryAssessment}
               className="flex items-center justify-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <RotateCcw className="w-5 h-5" />
@@ -214,7 +221,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
             </button>
             
             <button
-              onClick={onStartOver}
+              onClick={handleStartOver}
               className="flex items-center justify-center space-x-2 flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
             >
               <Home className="w-5 h-5" />
